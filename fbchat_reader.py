@@ -7,8 +7,8 @@ import emoji
 from fbchat import log, Client
 
 #Get password (this stable version of fbchat is stupid for requiring this regardless of whether cookies login works, but it works)
-#password = getpass.getpass() #For live
-password = 'PASSWORD' #For debugging 
+password = getpass.getpass() #For live
+#password = 'PASSWORD' #For debugging 
 
 #Set up the TTS engine (different voices available on macOS, in a different order)
 engine = pyttsx3.init()
