@@ -37,14 +37,28 @@ def callback(recognizer, audio):
     try:
         # for testing purposes, we're just using the default API key
         # to use another API key, use `r.recognize_google(audio, key="GOOGLE_SPEECH_RECOGNITION_API_KEY")`
-        # instead of `r.recognize_google(audio)`
+        # instead of `r.recognize_google(audio)`            
         verbal_diarrhea = recognizer.recognize_google(audio, pfilter=0)
-        threads = writerClient.fetchThreadList(limit=1)
-        print("To", writerClient.fetchUserInfo(threads[0].uid)[threads[0].uid].name+":", verbal_diarrhea)
-        writerClient.send(Message(text=verbal_diarrhea), thread_id=threads[0].uid, thread_type=ThreadType.USER)
-        if re.search('shut up', verbal_diarrhea):
-            stop_listening(wait_for_stop=True)
-            quit()
+        if re.search('abracadabra', verbal_diarrhea):
+            if(writerClient.searchForUsers(verbal_diarrhea.replace('abracadabra', ''))[0].is_friend==True):
+                UID = writerClient.searchForUsers(verbal_diarrhea.replace('abracadabra', ''))[0].uid
+                print("What to send to"+" "+writerClient.fetchUserInfo(UID)[UID].name)
+                try: 
+                    verbal_diarrhea = r.recognize_google(r.listen(m))
+                except:
+                    pass
+            else:
+                verbal_diarrhea = 'shazam' #stop
+                print("Not friends")
+
+        else:
+            UID = writerClient.fetchThreadList(limit=1)[0].uid
+        if (verbal_diarrhea.lower()!='shazam'):
+            print("To", writerClient.fetchUserInfo(UID)[UID].name+":", verbal_diarrhea)
+            writerClient.send(Message(text=verbal_diarrhea), thread_id=UID, thread_type=ThreadType.USER)
+        else: 
+            print("Nothing sent")
+        
     except sr.UnknownValueError:
         pass
     except sr.RequestError as e:
