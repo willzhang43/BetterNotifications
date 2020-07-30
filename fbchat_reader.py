@@ -19,8 +19,8 @@ if platform.system()=='Darwin':
     femaleVoice = 33
 else:
     engine.setProperty('rate', 115)
-    maleVoice = 1
-    femaleVoice = 2
+    maleVoice = 0
+    femaleVoice = 1
 
 def load_cookies(filename):
     try:
