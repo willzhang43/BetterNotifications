@@ -6,21 +6,34 @@ import platform, re, os, sys, time
 import emoji
 from fbchat import log, Client
 
-#Get password (this stable version of fbchat is stupid for requiring this regardless of whether cookies login works, but it works)
-password = getpass.getpass() #For live
-#password = 'PASSWORD' #For debugging 
-
 #Set up the TTS engine (different voices available on macOS, in a different order)
 engine = pyttsx3.init()
 voices = engine.getProperty('voices')
-if platform.system()=='Darwin':
-    engine.setProperty('rate', 120)
-    maleVoice = 7
-    femaleVoice = 33
+
+#Get creds
+username = input('Username: ') #Can leave these blank if logging in with cookies
+password = getpass.getpass() 
+langCode = input('Language (en_US*, zh_TW etc.): ') #For Windows, you must have the language installed
+if(langCode=='') or (langCode=='en_US'):
+    if platform.system()=='Darwin':
+        engine.setProperty('rate', 120)
+        maleVoice = voices[7]
+        femaleVoice = voices[33]
+    else:
+        engine.setProperty('rate', 115)
+        maleVoice = voices[0]
+        femaleVoice = voices[1]
 else:
-    engine.setProperty('rate', 115)
-    maleVoice = 0
-    femaleVoice = 1
+    for x in voices:
+        if (x.languages[0]==langCode):
+            maleVoice = x
+            femaleVoice = x
+            break
+        else:
+            x = None  
+    if (x==None):
+        print('No appropriate voice found for', langCode)    
+        quit()     
 
 def load_cookies(filename):
     try:
@@ -56,14 +69,17 @@ class reader(Client):
             # If you're not the author, read out (nick)name (stripped of emojis) and message (or "sticker"/"attachment"), use gender appropriate voice
             if author_id != self.uid:
                 user = readerClient.fetchUserInfo(author_id)
+                
                 if(user[author_id].nickname==None):
                     user[author_id].nickname = user[author_id].name
                 elif (demoji(user[author_id].nickname).strip()==''):
                     user[author_id].nickname = user[author_id].name
+                
                 if(re.match('female*',user[author_id].gender)!=None):
-                    engine.setProperty('voice', voices[femaleVoice].id)
+                    engine.setProperty('voice', femaleVoice.id)
                 else:
-                    engine.setProperty('voice', voices[maleVoice].id) 
+                    engine.setProperty('voice', maleVoice.id) 
+                
                 engine.say(demoji(user[author_id].nickname)) #cuz I'm super popular and have more than 1 friend who sends me messages, right?
                 if(message_object.text!=None): #Too lazy to specify whether attachment or images
                     engine.say(message_object.text)
