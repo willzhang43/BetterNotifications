@@ -3,13 +3,16 @@ import atexit
 import json
 import getpass
 from fbchat import Client
-from fbchat.models import *
+from fbchat.models import Message, ThreadType
 import speech_recognition as sr
 import os, re, sys, time
 
 #Get password (this stable version of fbchat is stupid for requiring this regardless of whether cookies login works, but it works)
-#password = getpass.getpass() #For live
-password = 'PASSWORD' #For debugging 
+user = input('Username: ')
+password = getpass.getpass() #For live
+langCode = input('Language (en-US*, zh-CN etc.): ')
+if(langCode==''):
+    langCode = 'en-US'
 
 def load_cookies(filename):
     try:
@@ -26,7 +29,7 @@ def save_cookies(filename, current_cookies):
 cookies = load_cookies(os.path.join(sys.path[0], 'session.json'))
        
 #Initiate client
-writerClient = Client(getpass.getuser(), password, session_cookies=cookies)
+writerClient = Client(user, password, session_cookies=cookies)
 
 #Save session cookies to file when the program exits
 atexit.register(lambda: save_cookies(os.path.join(sys.path[0], 'session.json'), writerClient.getSession()))
@@ -38,12 +41,13 @@ def callback(recognizer, audio):
         # for testing purposes, we're just using the default API key
         # to use another API key, use `r.recognize_google(audio, key="GOOGLE_SPEECH_RECOGNITION_API_KEY")`
         # instead of `r.recognize_google(audio)`            
-        verbal_diarrhea = recognizer.recognize_google(audio, pfilter=0)
+        verbal_diarrhea = recognizer.recognize_google(audio, pfilter=0, language=langCode)
         if re.search('abracadabra', verbal_diarrhea):
             if(writerClient.searchForUsers(verbal_diarrhea.replace('abracadabra', ''))[0].is_friend==True):
                 UID = writerClient.searchForUsers(verbal_diarrhea.replace('abracadabra', ''))[0].uid
-                print("What to send to"+" "+writerClient.fetchUserInfo(UID)[UID].name)
+                print('What to send to'+' '+writerClient.fetchUserInfo(UID)[UID].name)
                 try: 
+                    verbal_diarrhea = 'shazam'
                     verbal_diarrhea = r.recognize_google(r.listen(m))
                 except:
                     pass
@@ -53,11 +57,11 @@ def callback(recognizer, audio):
 
         else:
             UID = writerClient.fetchThreadList(limit=1)[0].uid
-        if (verbal_diarrhea.lower()!='shazam'):
+        if (re.search('shazam', verbal_diarrhea.lower())==None):
             print("To", writerClient.fetchUserInfo(UID)[UID].name+":", verbal_diarrhea)
             writerClient.send(Message(text=verbal_diarrhea), thread_id=UID, thread_type=ThreadType.USER)
         else: 
-            print("Nothing sent")
+            print("Cancel initiated; nothing sent")
         
     except sr.UnknownValueError:
         pass
